@@ -2,21 +2,23 @@ close all
 clear
 clc
 
+PROJECT_WORK_DIR = 'D:\ShreyasSkandan\Smart_Toy_Repository\src\ShreyasSkandan\code_postprocessing_gopro\StereoPortraitMode';
+
 % Load rectified images - Colour and Grayscale
-RECT_LEFT_BW = imread('D:\TestFocus\Rectified\Focus\RectifiedImages\LEFT\left_rectifiedFrame0000001.png');
-RECT_RIGHT_BW = imread('D:\TestFocus\Rectified\Focus\RectifiedImages\RIGHT\right_rectifiedFrame0000001.png');
-RECT_LEFT_CLR = imread('D:\TestFocus\Rectified\Focus\RectifiedImages\Colour\leftCLR_rectifiedFrame0000001.png');
-RECT_RIGHT_CLR = imread('D:\TestFocus\Rectified\Focus\RectifiedImages\Colour\rightCLR_rectifiedFrame0000001.png');
+RECT_LEFT_BW = imread(strcat(PROJECT_WORK_DIR,'\RectifiedImages\LEFT\left_rectifiedFrame0000001.png'));
+RECT_RIGHT_BW = imread(strcat(PROJECT_WORK_DIR,'\RectifiedImages\RIGHT\right_rectifiedFrame0000001.png'));
+RECT_LEFT_CLR = imread(strcat(PROJECT_WORK_DIR,'\RectifiedImages\Colour\leftCLR_rectifiedFrame0000001.png'));
+RECT_RIGHT_CLR = imread(strcat(PROJECT_WORK_DIR,'\RectifiedImages\Colour\rightCLR_rectifiedFrame0000001.png'));
 
 % Load the depth map corresponding to the rectified image
 %NUMPY_LOC = 'D:\TestFocus\Rectified\Focus\DepthImages\NUMPY\depth_test1000000.npy';
 %DEPTH = readNPY(NUMPY_LOC);
-DEPTH = load('D:\TestFocus\Rectified\Focus\DepthImages\disparityimage.mat');
+DEPTH = load(strcat(PROJECT_WORK_DIR,'\DepthImages\disparityimage.mat'));
 DEPTH = DEPTH.DEPTH;
 %save('disparityimage.mat','DEPTH');
 
-slope_threshold = 5;
-depth_threshold = 5;
+slope_threshold = 8;
+depth_threshold = 8;
 % For K-Means depth segmentation algorithm
 % nDepths = 4;
 
@@ -35,7 +37,7 @@ blurred_image_vec = reshape(blurredImage,[size(DEPTH,1)*size(DEPTH,2),3]);
 % save('kmeansresult.mat',pixel_labels);
 % figure,
 % imshow(pixel_labels,[]);
-segdata = load('D:\TestFocus\Rectified\Focus\kmeansresult.mat');
+segdata = load('kmeansresult.mat');
 pixel_labels = segdata.pixel_labels;
 
 % Create a mask of all pixels at the prescribed depth (usually the max
@@ -87,11 +89,19 @@ gradient = [Evec,Evec,Evec];
 resultingImageVec = double(gradient).*double(blurred_image_vec) + double(1-gradient).*double(colour_image_vec);
 resImage = reshape(resultingImageVec,[size(DEPTH,1),size(DEPTH,2),3]);
 
-figure,
-imshow(uint8(resImage));
+%figure,
+%imshow(uint8(resImage));
+
+%figure,
+%imshow(reshape(colour_image_vec,[size(DEPTH,1),size(DEPTH,2),3]));
+
 
 figure,
-imshow(reshape(colour_image_vec,[size(DEPTH,1),size(DEPTH,2),3]));
+subplot(2,1,1);
+imshow(imresize(uint8(resImage),0.5,'nearest'));
+
+subplot(2,1,2);
+imshow(imresize(RECT_LEFT_CLR,0.5,'nearest'));
 
 
 

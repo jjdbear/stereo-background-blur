@@ -2,27 +2,39 @@ close all
 clear
 clc
 
-% Load rectified images - Colour and Grayscale
-RECT_LEFT_BW = imread('D:\TestFocus\Rectified\Focus\LEFT\left_rectifiedFrame0000001.png');
-RECT_RIGHT_BW = imread('D:\TestFocus\Rectified\Focus\RIGHT\right_rectifiedFrame0000001.png');
-RECT_LEFT_CLR = imread('D:\TestFocus\Rectified\Focus\leftCLR_rectifiedFrame0000001.png');
-RECT_RIGHT_CLR = imread('D:\TestFocus\Rectified\Focus\rightCLR_rectifiedFrame0000001.png');
+PROJECT_WORK_DIR = 'D:\ShreyasSkandan\Smart_Toy_Repository\src\ShreyasSkandan\code_postprocessing_gopro\StereoPortraitMode';
 
+% Load rectified images - Colour and Grayscale
+RECT_LEFT_BW = imread(strcat(PROJECT_WORK_DIR,'\RectifiedImages\LEFT\left_rectifiedFrame0000001.png'));
+RECT_RIGHT_BW = imread(strcat(PROJECT_WORK_DIR,'\RectifiedImages\RIGHT\right_rectifiedFrame0000001.png'));
+RECT_LEFT_CLR = imread(strcat(PROJECT_WORK_DIR,'\RectifiedImages\Colour\leftCLR_rectifiedFrame0000001.png'));
+RECT_RIGHT_CLR = imread(strcat(PROJECT_WORK_DIR,'\RectifiedImages\Colour\rightCLR_rectifiedFrame0000001.png'));
 
 % Load the depth map corresponding to the rectified image
-NUMPY_LOC = 'D:\TestFocus\Rectified\Focus\NUMPY\depth_test1000000.npy';
-DEPTH = readNPY(NUMPY_LOC);
+%NUMPY_LOC = 'D:\TestFocus\Rectified\Focus\DepthImages\NUMPY\depth_test1000000.npy';
+%DEPTH = readNPY(NUMPY_LOC);
+DEPTH = load(strcat(PROJECT_WORK_DIR,'\DepthImages\disparityimage.mat'));
+DEPTH = DEPTH.DEPTH;
+DEPTH = imresize(DEPTH,0.5,'nearest');
+%save('disparityimage.mat','DEPTH');
+
+slope_threshold = 8;
+depth_threshold = 8;
+% For K-Means depth segmentation algorithm
+% nDepths = 4;
 
 % Created the background image - blurred image
 H = fspecial('disk',20);
 blurredImage = imfilter(RECT_LEFT_CLR,H,'replicate');
+blurredImage = imresize(blurredImage,0.5,'nearest');
+
+RECT_LEFT_CLR = imresize(RECT_LEFT_CLR,0.5,'nearest');
 
 % Unroll both colour and blurred images into vectors
 colour_image_vec = reshape(RECT_LEFT_CLR,[size(DEPTH,1)*size(DEPTH,2),3]);
 blurred_image_vec = reshape(blurredImage,[size(DEPTH,1)*size(DEPTH,2),3]);
 
 % Use K-Means to segment out the depth image into
-% nDepths = 4;
 % ab = reshape(DEPTH,[size(DEPTH,1)*size(DEPTH,2),1]);
 % [cluster_idx, cluster_center] = kmeans(ab,nDepths,'distance','sqEuclidean','Replicates',3);
 % pixel_labels = reshape(cluster_idx,[size(DEPTH,1),size(DEPTH,2)]);
@@ -51,45 +63,41 @@ mask = bwareafilt(mask, 1, 'largest');
 mask = imfill(mask,'holes');
 mask = bwmorph(mask,'spur',25);
 
-st = regionprops(mask,'BoundingBox');
-width = st.BoundingBox(3);
-height = st.BoundingBox(4);
-row_start = st.BoundingBox(2);
-col_start = st.BoundingBox(1);
-row_end = row_start + height;
-col_end = col_start + width;
-
-padding = 30;
-T = mask(row_start-padding:row_end+padding,col_start-padding:col_end+padding);
-figure,
-imagesc(T);
-
-DD = bwdist(T);
-figure,
-imagesc(DD);
+% st = regionprops(mask,'BoundingBox');
+% width = st.BoundingBox(3);
+% height = st.BoundingBox(4);
+% row_start = st.BoundingBox(2);
+% col_start = st.BoundingBox(1);
+% row_end = row_start + height;
+% col_end = col_start + width;
 
 % Create a distance transform matrix from the mask outward
-D = bwdist(mask_crop);
+D = bwdist(mask);
+D(D>depth_threshold) = slope_threshold;
 % Standardize the distance transform to create a gradient
 maxD = max(max(D));
 minD = min(min(D));
 mean = mean2(D);
 normDistTransVec = (D - minD)/(maxD-minD);
-newmask = ones(
+%newmask = ones(size(DEPTH,1),size(DEPTH,2));
+%newmask(row_start-padding:row_end+padding,col_start-padding:col_end+padding) = normDistTransVec;
+%normDistTransVec = newmask;
+newmask = normDistTransVec;
+figure,
+imagesc(newmask);
+
 Evec = reshape(normDistTransVec,[size(normDistTransVec,1)*size(normDistTransVec,2),1]);
 gradient = [Evec,Evec,Evec];
 
 % Apply the gradient onto the image
 resultingImageVec = double(gradient).*double(blurred_image_vec) + double(1-gradient).*double(colour_image_vec);
-resImage = reshape(resultingImage,[size(DEPTH,1),size(DEPTH,2),3]);
-
-
+resImage = reshape(resultingImageVec,[size(DEPTH,1),size(DEPTH,2),3]);
 
 figure,
 imshow(uint8(resImage));
 
-figure,
-imshow(reshape(colour_image_vec,[size(DEPTH,1),size(DEPTH,2),3]));
+%figure,
+%imshow(reshape(colour_image_vec,[size(DEPTH,1),size(DEPTH,2),3]));
 
 
 
