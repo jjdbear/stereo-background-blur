@@ -1,49 +1,7 @@
 # stereo-background-blur
 The new iPhone 7 Plus Portrait Mode inspired me to try my hand at background blur with a pair of stereo GoPros.
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Stereo Camera: Automated Background Blur</title>
-<style>
-div.container {
-    width: 100%;
-    border: 1px solid gray;
-}
-header, footer {
-    padding: 1em;
-    color: white;
-    background-color: #224870;
-    clear: left;
-    text-align: center;
-}
-nav {
-    float: left;
-    max-width: 160px;
-    margin: 0;
-    padding: 1em;
-}
-nav ul {
-    list-style-type: none;
-    padding: 0;
-}
-   
-nav ul a {
-    text-decoration: none;
-}
-article {
-    margin-left: 170px;
-    border-left: 1px solid gray;
-    padding: 1em;
-    overflow: hidden;
-}
-code{
-    font-family: monospace;
-}
-</style>
-</head>
 <body>
-
 <div class="container">
 
 <header>
@@ -142,7 +100,7 @@ The last step is to extract the largest blob - the object/region of interest usi
 Now that you've extracted the mask, you can go ahead and use this as a foreground and blur out the rest of our image. But that ends up looking quite shabby at the edges of where the mask ends. While the method suggested here isn't much better than shabby it bears some intuition into how you'd go about developing a smooth transition between foreground and background.<br><br>
 
 I used the <i>distance transform</i> function on the foreground mask. What this does is give you a distance between each pixel and the edges of the foreground mask. The idea is to use this distance to vary the amount of blurring that occurs at the edges of the foreground to make the transition from foreground to background look less ugly. By applying a distance transform on your foreground mask you should arrive at something similar to this using the Euclidean distance metric.<br><br>
-<img src="img/distance_transform_full.png" style="width:50%"><br>
+
 
 The next step once again requires tuning to taste. Depending on how much of a gradual fade you desire between the foreground and the background you can tune the thresholds with which you convert the above distance transform map into a interpolation gradient. What I did was normalized the distance transform values between 0 and 1 and used that value to control my <i>alpha composting / alpha blending</i>, where I was basically blending the original image with it's blurred version. The following is the gradient map that I used.<br><br>
 <img src="img/distance_transform.png" style="width:50%"><br>
@@ -166,4 +124,3 @@ There are many other approaches to handling this problem. I hope you enjoyed rea
 </div>
 
 </body>
-</html>
