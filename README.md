@@ -8,21 +8,6 @@ The new iPhone 7 Plus Portrait Mode inspired me to try my hand at background blu
    <h1>Stereo Vision</h1>
    <h2>Automated Background Blur</h2>
 </header>
-  
-<nav>
-Quick Links:
-  <ul>
-    <li><a href="#intro">Introduction</a></li>
-    <li><a href="#images">Data</a></li>
-    <li><a href="#disparity">Disparity</a></li>
-    <li><a href="#regionid">Region Identification</a></li>
-    <li><a href="#foreground">Foreground Masking</a></li>
-    <li><a href="#prettify">Results</a></li>
-  </ul>
-  <ul>
-  <li><a href="index.html"> << Back</a><li>
-  </ul>
-</nav>
 
 <article id="intro">
 <h3>Introduction</h3>
